@@ -1,13 +1,13 @@
 {
   "name": "infrastry-gauntlet",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "private": true,
   "type": "module",
-  "description": "Reproducible platform assurance and observability harness for testing Infrastry automation.",
+  "description": "Reproducible platform assurance and observability harness with evidence-backed findings.",
   "engines": { "node": ">=20" },
   "scripts": {
-    "start": "node server-v4.mjs",
-    "check": "node --check server-v4.mjs && node --check server-v3.mjs",
+    "start": "node server-v5.mjs",
+    "check": "node --check server-v5.mjs && node --check server-v3.mjs",
     "test": "node --test"
   },
   "dependencies": {

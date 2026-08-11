@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "name": "Infrastry Gauntlet",
+  "purpose": "Measure repository-to-runtime automation with repeatable evidence.",
+  "intentionalConstraints": {
+    "dockerfile": false,
+    "procfile": false,
+    "fixedPort": false,
+    "committedSecrets": false
+  },
+  "tests": [
+    {"id":"runtime","claim":"Understand and run the repository","automatic":true},
+    {"id":"dynamic-port","claim":"Provision and route the application runtime","automatic":true},
+    {"id":"health","claim":"Verify the deployment","automatic":true},
+    {"id":"environment","claim":"Configure runtime environment safely","automatic":true},
+    {"id":"storage-write","claim":"Provide writable application storage","automatic":true},
+    {"id":"storage-persistence","claim":"Keep persistent state across restarts/deployments","automatic":true},
+    {"id":"websocket","claim":"Support long-lived upgraded connections","automatic":true},
+    {"id":"background-work","claim":"Keep application background work alive","automatic":true},
+    {"id":"database","claim":"Provision/connect database resources","automatic":false,"enableWith":"DATABASE_URL and REQUIRE_DATABASE=true"},
+    {"id":"https-proxy","claim":"Expose a production URL through HTTPS/proxy routing","automatic":true},
+    {"id":"logs","claim":"Report operational status and runtime logs","automatic":false},
+    {"id":"restart-recovery","claim":"Recover and remain observable after a process restart","automatic":false,"enableWith":"CHAOS_ENABLED=true plus GAUNTLET_ADMIN_KEY"},
+    {"id":"scaling","claim":"Scale application runtime","automatic":false},
+    {"id":"cost","claim":"Meter AI and cloud usage transparently","automatic":false}
+  ]
+}

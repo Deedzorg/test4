@@ -1,13 +1,13 @@
 {
   "name": "infrastry-gauntlet",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "Evidence-driven deployment observability harness for testing Infrastry automation.",
   "engines": { "node": ">=20" },
   "scripts": {
-    "start": "node boot.mjs",
-    "check": "node --check boot.mjs && node --check server.mjs",
+    "start": "node server-v2.mjs",
+    "check": "node --check server-v2.mjs && node --check public/app.js",
     "test": "node --test"
   },
   "dependencies": {

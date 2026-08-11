@@ -1,0 +1,19 @@
+{
+  "name": "infrastry-gauntlet",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A deployment observability harness for testing Infrastry repository analysis, provisioning, deployment, verification, persistence, databases, WebSockets, monitoring, and recovery.",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "check": "node --check server.mjs && node --check public/app.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "pg": "^8.0.0",
+    "ws": "^8.0.0"
+  }
+}

@@ -1,0 +1,31 @@
+name: Gauntlet baseline
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run check
+      - run: npm test
+      - name: Boot and probe
+        env:
+          GAUNTLET_SENTINEL: github-actions
+          PORT: 3000
+        run: |
+          npm start > /tmp/gauntlet.log 2>&1 &
+          echo $! > /tmp/gauntlet.pid
+          for i in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:3000/healthz; then break; fi
+            sleep 0.5
+          done
+          curl --fail --silent http://127.0.0.1:3000/readyz
+          curl --fail --silent http://127.0.0.1:3000/api/tests
+          kill "$(cat /tmp/gauntlet.pid)"

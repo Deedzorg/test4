@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "tests": [
+    {"key":"runtime","name":"Runtime","category":"Runtime","question":"Can Infrastry start and keep the application process reachable?"},
+    {"key":"dynamic-port","name":"Dynamic port","category":"Networking","question":"Does the platform supply and route the application port correctly?"},
+    {"key":"environment-injection","name":"Environment injection","category":"Configuration","question":"Do configured environment values reach the running application?"},
+    {"key":"writable-storage","name":"Writable storage","category":"Storage","question":"Can the running application read and write its assigned data directory?"},
+    {"key":"storage-persistence","name":"Storage persistence","category":"Storage","question":"Does application filesystem state survive an independent deployment or restart?"},
+    {"key":"database-connection","name":"Database connection","category":"Database","question":"Can the application connect to the managed PostgreSQL dependency?"},
+    {"key":"database-persistence","name":"Database persistence","category":"Database","question":"Does managed PostgreSQL preserve identity and existing data across application replacement?"},
+    {"key":"restart-recovery","name":"Restart recovery","category":"Recovery","question":"Does the service recover successfully across independent process boots?"},
+    {"key":"graceful-shutdown","name":"Graceful shutdown","category":"Recovery","question":"Does application replacement provide a measurable graceful termination path?"},
+    {"key":"https-proxy","name":"HTTPS proxy","category":"Networking","question":"Does the public proxy deliver HTTPS correctly to the application?"},
+    {"key":"websocket-proxy","name":"WebSocket proxy","category":"Networking","question":"Do WebSocket upgrades and echo traffic survive the public proxy?"},
+    {"key":"readiness-liveness","name":"Readiness vs liveness","category":"Verification","question":"Does platform behavior distinguish an alive process from an application that is not ready?"},
+    {"key":"runtime-log-capture","name":"Runtime log capture","category":"Observability","question":"Are correlated stdout and stderr markers captured accurately in application logs?"},
+    {"key":"access-logging","name":"Access logging","category":"Observability","question":"Are controlled HTTP responses visible and attributable in access logs?"}
+  ]
+}

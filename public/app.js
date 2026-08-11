@@ -1,7 +1,8 @@
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const els = Object.fromEntries(['clientState','score','signals','tests','events','marker','persistOut','wsState','wsMsg','wsOut','dbOut','instancesCount','instances','plan','intervention','recovery','cost'].map((id) => [id, $(id)]));
+  const ids = ['clientState','score','continuity','signals','tests','events','marker','persistOut','wsState','wsMsg','wsOut','dbOut','instancesCount','instances','plan','intervention','recovery','cost'];
+  const els = Object.fromEntries(ids.map((id) => [id, $(id)]));
   let status = null;
   let tests = [];
   let events = [];
@@ -16,12 +17,12 @@
     els[id].addEventListener('input', () => localStorage.setItem(`gauntlet.${id}`, els[id].value));
   }
 
-  document.querySelector('[data-action="refresh"]').addEventListener('click', () => refreshAll());
-  document.querySelector('[data-action="snapshot"]').addEventListener('click', () => snapshot());
-  document.querySelector('[data-action="export"]').addEventListener('click', () => exportReport());
-  document.querySelector('[data-action="persist"]').addEventListener('click', () => persist());
-  document.querySelector('[data-action="ws"]').addEventListener('click', () => wsSend());
-  document.querySelector('[data-action="db"]').addEventListener('click', () => dbProbe());
+  document.querySelector('[data-action="refresh"]').addEventListener('click', refreshAll);
+  document.querySelector('[data-action="snapshot"]').addEventListener('click', snapshot);
+  document.querySelector('[data-action="export"]').addEventListener('click', exportReport);
+  document.querySelector('[data-action="persist"]').addEventListener('click', persist);
+  document.querySelector('[data-action="ws"]').addEventListener('click', wsSend);
+  document.querySelector('[data-action="db"]').addEventListener('click', dbProbe);
 
   function setClient(message, state = 'pass') {
     els.clientState.className = `client ${state}`;
@@ -44,7 +45,7 @@
       ]);
       if (status.instance?.id) rememberInstance(status.instance.id);
       render();
-      setClient(`Browser harness active · API reachable · v${status.version}`, 'pass');
+      setClient(`Browser harness active · API reachable · v${status.version} · release ${status.release?.releaseId || 'unknown'}`, 'pass');
     } catch (error) {
       setClient(`Browser harness loaded, API refresh failed: ${error.message}`, 'fail');
     }
@@ -52,6 +53,22 @@
 
   function render() {
     if (!status) return;
+    const c = status.continuity || {};
+    const cs = c.storage || {};
+    const cd = c.database || {};
+
+    const continuityCards = [
+      ['Release', c.releaseId || 'unknown', c.experiment || ''],
+      ['Process instance', short(c.instanceId), c.processStartedAt || ''],
+      ['Storage identity', short(cs.identity), `boots ${cs.continuityBoots ?? 0} · ${cs.dataDir || ''}`],
+      ['Storage created', cs.identityCreatedAt || 'unknown', cs.lastMarker ? `marker: ${cs.lastMarker}` : 'no manual marker'],
+      ['Database identity', short(cd.identity), `boots ${cd.bootCount ?? 0} · rows ${cd.probeRows ?? 0}`],
+      ['DB max probe ID', cd.maxProbeId ?? 'none', cd.databaseName || ''],
+      ['DB endpoint fingerprint', cd.endpointFingerprint || 'none', 'safe endpoint hash; credentials excluded'],
+      ['PostgreSQL', cd.serverVersion || 'unknown', `graceful shutdowns ${cd.gracefulShutdowns ?? 0}`]
+    ];
+    els.continuity.innerHTML = continuityCards.map(([name, value, detail]) => `<div class="card"><strong>${escapeHtml(String(name))}</strong><code>${escapeHtml(String(value))}</code><span>${escapeHtml(String(detail))}</span></div>`).join('');
+
     const cards = [
       ['Runtime', 'pass', status.instance.node],
       ['Storage', status.persistence.storage.ok ? 'pass' : 'fail', status.persistence.storage.detail],
@@ -59,8 +76,9 @@
       ['Database', status.database.configured ? (status.database.ok ? 'pass' : 'fail') : 'skip', status.database.detail],
       ['HTTPS', status.proxy.httpsObserved ? 'pass' : 'warn', status.proxy.forwardedProto || 'not observed'],
       ['Background', status.background.lastAt ? 'pass' : 'pending', status.background.lastAt || 'waiting'],
-      ['Boots', status.persistence.bootCount > 1 ? 'pass' : 'pending', String(status.persistence.bootCount)],
-      ['Instance', 'pass', status.instance.id.slice(0, 8)]
+      ['Storage boots', status.persistence.storage.continuityBoots > 1 ? 'pass' : 'pending', String(status.persistence.storage.continuityBoots || 0)],
+      ['DB boots', status.database.bootCount > 1 ? 'pass' : 'pending', String(status.database.bootCount || 0)],
+      ['Instance', 'pass', short(status.instance.id)]
     ];
     els.signals.innerHTML = cards.map(([name, cls, detail]) => `<div class="card"><strong>${escapeHtml(name)}</strong><b class="${cls}">${cls}</b><br><span>${escapeHtml(String(detail))}</span></div>`).join('');
     els.tests.innerHTML = tests.map((t) => `<div><span>${escapeHtml(t.id)} — ${escapeHtml(String(t.detail))}</span><b class="${t.status}">${t.status}</b></div>`).join('');
@@ -70,6 +88,7 @@
     els.instances.textContent = [...instanceIds].join('\n');
   }
 
+  function short(value) { return value ? String(value).slice(0, 12) : 'none'; }
   function rememberInstance(id) {
     instanceIds.add(id);
     localStorage.setItem('gauntlet.instanceIds', JSON.stringify([...instanceIds]));
@@ -105,7 +124,10 @@
     ws.onopen = () => { els.wsState.textContent = 'connected'; };
     ws.onmessage = (event) => {
       els.wsOut.textContent = event.data;
-      try { const message = JSON.parse(event.data); if (message.instanceId) { rememberInstance(message.instanceId); render(); } } catch {}
+      try {
+        const message = JSON.parse(event.data);
+        if (message.instanceId) { rememberInstance(message.instanceId); render(); }
+      } catch {}
     };
     ws.onerror = () => { els.wsState.textContent = 'error'; };
     ws.onclose = () => { els.wsState.textContent = 'reconnecting…'; setTimeout(connectWebSocket, 2000); };
@@ -117,17 +139,21 @@
   }
 
   function exportReport() {
-    const report = { generatedAt: new Date().toISOString(), url: location.href, userAgent: navigator.userAgent, status, tests, events, instances: [...instanceIds], notes: Object.fromEntries(['plan','intervention','recovery','cost'].map((id) => [id, els[id].value])) };
+    const report = {
+      generatedAt: new Date().toISOString(), url: location.href, userAgent: navigator.userAgent,
+      status, tests, events, instances: [...instanceIds],
+      notes: Object.fromEntries(['plan','intervention','recovery','cost'].map((id) => [id, els[id].value]))
+    };
     const url = URL.createObjectURL(new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' }));
     const anchor = document.createElement('a');
     anchor.href = url;
-    anchor.download = 'infrastry-gauntlet-report.json';
+    anchor.download = `infrastry-gauntlet-${status?.release?.releaseId || 'report'}.json`;
     anchor.click();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   function escapeHtml(value) {
-    return value.replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    return String(value).replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   }
 
   setClient('Browser harness loaded · checking APIs…', 'pending');

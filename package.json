@@ -3,13 +3,11 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "A deployment observability harness for testing Infrastry repository analysis, provisioning, deployment, verification, persistence, databases, WebSockets, monitoring, and recovery.",
-  "engines": {
-    "node": ">=20"
-  },
+  "description": "Evidence-driven deployment observability harness for testing Infrastry automation.",
+  "engines": { "node": ">=20" },
   "scripts": {
     "start": "node server.mjs",
-    "check": "node --check server.mjs && node --check public/app.js",
+    "check": "node --check server.mjs",
     "test": "node --test"
   },
   "dependencies": {

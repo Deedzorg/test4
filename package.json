@@ -1,13 +1,13 @@
 {
   "name": "infrastry-gauntlet",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "private": true,
   "type": "module",
-  "description": "Evidence-backed Infrastry assurance harness with independent-trial confidence, reproducibility and observability controls.",
+  "description": "Automated evidence-backed Infrastry assurance harness with reproducibility, observability and one-click safe test suites.",
   "engines": { "node": ">=20" },
   "scripts": {
-    "start": "node server-v6.mjs",
-    "check": "node --check server-v6.mjs && node --check server-v3.mjs",
+    "start": "node server-v7.mjs",
+    "check": "node --check server-v7.mjs && node --check server-v6.mjs && node --check server-v3.mjs",
     "test": "node --test"
   },
   "dependencies": {

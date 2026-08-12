@@ -1,84 +1,73 @@
-# Infrastry Gauntlet v1.3 — Reproducibility + Observability
+# Infrastry Gauntlet v1.3.2 — Final assurance protocol
 
 ## Purpose
 
-Produce repeatable, attributable evidence about repository understanding, provisioning, deployment, verification, persistence, networking, databases, monitoring, recovery, and developer-facing observability without treating single anomalies as platform defects.
+Produce repeatable, attributable evidence about repository understanding, provisioning, deployment, verification, persistence, networking, databases, monitoring, recovery, and developer-facing observability without turning single anomalies into platform accusations.
 
 ## Reporting model
 
-Tests use one permanent human-readable identity. Run numbers are evidence, not part of the test name.
+Every test has one permanent human-readable name. Run counts, instance IDs, releases, timestamps and correlation IDs are evidence fields, not part of the test name.
 
-Examples:
+The primary report answers four questions:
 
-- **Runtime** — not `CORE-RUNTIME-001`
-- **Dynamic port** — not `NET-DYNAMIC-PORT-001`
-- **Environment injection** — not `ENV-SENTINEL-001`
-- **Writable storage** — not `STORAGE-WRITE-001`
-- **Storage persistence** — not `STORAGE-CONTINUITY-001`
-- **Database connection** — not `DB-CONNECT-001`
-- **Database persistence** — not `DB-CONTINUITY-001`
-- **Restart recovery** — not `RESTART-RECOVERY-001`
-- **Graceful shutdown** — not `SHUTDOWN-GRACEFUL-001`
-- **HTTPS proxy** — not `PROXY-HTTPS-001`
-- **WebSocket proxy** — not `WS-PROXY-ECHO-001`
-- **Readiness vs liveness** — not `READINESS-SEPARATION-001`
-- **Runtime log capture** — not `OBS-LOG-MARKER-001`
+1. What did we test?
+2. What actually happened?
+3. How many independent times did it happen?
+4. How confident are we?
 
-Each finding should read as:
+Raw expected/actual values remain available in expandable evidence and the JSON export.
 
-> **Database persistence** — PASS · 3/3 successful runs · Confirmed pass
->
-> Same database identity and endpoint fingerprint observed across three independent application instances. Existing rows remained intact and database boot count increased on every replacement.
+## Independence policy
 
-The report may retain a compact machine key such as `database-persistence`, but internal keys should not be the primary UI copy.
+Confidence counts independent trials, not clicks or database rows.
 
-## Evidence model
-
-Every application boot creates a unique `runId` and `instanceId`. Those identifiers belong in the evidence details, not in the test title. Durable PostgreSQL records store individual observations and lifecycle events.
-
-Each test summary contains:
-
-- finding name
-- current verdict
-- confidence
-- concluded runs
-- pass / fail / pending counts
-- distinct application instances
-- distinct releases
-- expected behavior
-- observed behavior
-- evidence / correlation data
-- first observed / last observed timestamps
+- Deployment, runtime, storage, database and lifecycle findings deduplicate by runtime instance.
+- Observability findings deduplicate by verified correlation ID.
+- Repeated refreshes on the same runtime do not increase confidence.
+- Platform-facing observations do not count as PASS/FAIL until correlated with Infrastry logs or monitoring.
 
 ## Confidence policy
 
-- **Confirmed pass**: at least 3 concluded PASS runs and 0 FAIL runs.
-- **Confirmed defect**: at least 3 concluded FAIL runs and 0 PASS runs.
-- **Intermittent**: at least 1 PASS and at least 1 FAIL.
-- **Likely pass / likely defect**: 2 matching concluded runs with no opposite result.
-- **Single observation**: exactly 1 concluded PASS or FAIL run.
-- **Insufficient evidence**: no concluded PASS/FAIL result yet.
+Three independent matching trials are required for confirmation.
 
-Pending and observational runs are retained but do not establish a defect.
+- **Confirmed pass** — 3+ independent passes and no failures.
+- **Confirmed defect** — 3+ independent failures and no passes.
+- **Likely pass** — 2 independent passes and no failures.
+- **Likely concern** — 2 independent failures and no passes.
+- **Intermittent** — contradictory pass/fail evidence.
+- **Needs evidence** — evidence exists but has not met a conclusion threshold.
+- **Not tested** — no controlled evidence exists yet.
 
-## v1.3 experiments
+Architectural characteristics are reported neutrally. For example, application filesystem behavior is described as **persistent**, **ephemeral**, or **inconsistent** rather than automatically being called a defect.
 
-### Readiness vs liveness
+## Evidence integrity
 
-A protected endpoint temporarily forces `/readyz` to return HTTP 503 while `/healthz` continues to return HTTP 200. The harness verifies the endpoint separation internally. Infrastry's platform/monitoring reaction must be correlated from Application Logs before any conclusion about readiness-aware health checks is made.
+Evidence-writing experiment controls require `GAUNTLET_ADMIN_KEY`. Public visitors can read the report but cannot submit verification results or controlled log/readiness/access experiments.
 
-### Observability correlation
+Historical v1.3 records are retained and mapped from their former `-001` identifiers into the permanent finding names so previous evidence is not discarded.
 
-A protected marker emits one structured stdout entry and one structured stderr entry using the same correlation ID. Access-log probes generate controlled 200, 404, and 500 responses with correlation IDs. These are compared with Infrastry's Platform / Build / Runtime / Access timeline.
+## Controlled experiments
+
+### Readiness and liveness
+
+The harness can temporarily hold `/healthz` at HTTP 200 while `/readyz` returns HTTP 503. Endpoint separation is recorded automatically. Any claim about Infrastry's platform reaction requires correlation with its Platform/Monitoring logs before a pass/fail is recorded.
+
+### Runtime logs
+
+A protected control emits matching structured stdout and stderr markers with a unique correlation ID. The result remains an observation until that ID is verified in Infrastry Runtime logs.
+
+### Access logs
+
+Protected controls generate known HTTP 200, 404 and 500 responses with unique correlation IDs. Results remain observations until verified in Infrastry Access logs.
 
 ### Shutdown receipts
 
-The supervisor records `shutdown_signal_received`, forwards SIGTERM to the child process, waits for it to exit, and then records `graceful_shutdown` in durable PostgreSQL when possible. A graceful-shutdown conclusion requires durable receipts rather than merely observing process replacement.
+The supervisor records receipt of SIGTERM/SIGINT, forwards SIGTERM to the child harness, waits for exit, and records a durable graceful-shutdown receipt in PostgreSQL when possible.
 
-### Reproduction matrix
+### Persistence comparisons
 
-Automatic checks are persisted once per run. Confidence is aggregated across distinct process instances and releases.
+Storage and database continuity are compared automatically against evidence from a prior independent runtime. Database persistence requires matching database identity/fingerprint, non-decreasing existing data, and advancing boot history. Storage identity changes are reported as evidence of an ephemeral application filesystem, not automatically as a defect.
 
-## Scientific reporting rule
+## Final reporting rule
 
-Negative findings remain observations until reproduced under controlled conditions. The final report must distinguish confirmed, likely, intermittent, single-observation, and not-tested findings. The UI and exports should lead with clear findings and supporting evidence, not internal test codes.
+Negative platform feedback must be reproducible. A finding may be described as confirmed only when its defined independence threshold is satisfied and the underlying raw evidence is preserved for audit. Unsupported conclusions remain **Needs evidence** or **Not tested**.

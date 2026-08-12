@@ -1,4 +1,4 @@
 {
-  "releaseId": "v1.4-automation",
-  "experiment": "automated-observability"
+  "releaseId": "v1.4.1-automation-hardened",
+  "experiment": "automated-observability-regression"
 }

@@ -12,8 +12,10 @@ test('manifest contains core infrastructure tests', () => {
   }
 });
 
-test('repository leaves runtime inference to the platform', async () => {
-  assert.equal(pkg.scripts.start, 'node server.mjs');
+test('repository leaves infrastructure inference to the platform', async () => {
+  assert.match(pkg.scripts.start, /^node server-v\d+\.mjs$/, 'start script should point at the active versioned Gauntlet server');
+  const entrypoint = pkg.scripts.start.split(/\s+/)[1];
+  await access(new URL(`../${entrypoint}`, import.meta.url));
   assert.equal(manifest.intentionalConstraints.fixedPort, false);
   for (const filename of ['Dockerfile', 'Procfile']) {
     await assert.rejects(access(new URL(`../${filename}`, import.meta.url)));

@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "releaseCorrections": [
+    {
+      "runId": "5ea9e0ec-8915-4749-9032-c44c297ec98f",
+      "from": "v1.3-final-assurance",
+      "to": "v1.4.1-automation-hardened",
+      "basis": "The exported runtimeStatus.child.release for this exact run reported v1.4.1-automation-hardened while the legacy supervisor label remained v1.3-final-assurance."
+    }
+  ],
+  "platformVerifications": [
+    {
+      "testKey": "readiness-platform",
+      "correlationId": "c0e3256a-7d8a-4408-a1b8-c7581f583f38",
+      "verdict": "fail",
+      "expected": {
+        "platformReaction": "observe"
+      },
+      "actual": {
+        "platformBehavior": "liveness-only",
+        "health": 200,
+        "ready": 503,
+        "availabilityPercent": 100,
+        "deploymentStatus": "ACTIVE"
+      },
+      "note": "Operator-confirmed Infrastry Monitoring remained ACTIVE with 100% availability and Healthy checks while the correlated 60-second experiment held /healthz=200 and /readyz=503.",
+      "basis": "Correlated Gauntlet export plus operator-provided Infrastry Monitoring screenshot. This records observed behavior, not a defect classification."
+    }
+  ]
+}

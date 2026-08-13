@@ -1,0 +1,5 @@
+{
+  "probe": "source-sync-after-settings-resave",
+  "purpose": "Verify Infrastry GitHub push source refresh without changing application behavior",
+  "createdAt": "2026-08-13T00:35:00Z"
+}
